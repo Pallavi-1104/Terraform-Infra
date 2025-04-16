@@ -1,0 +1,15 @@
+#!/bin/bash
+echo ECS_CLUSTER=${cluster_name} >> /etc/ecs/ecs.config
+
+yum update -y
+yum install -y docker ecs-init
+
+systemctl enable docker
+systemctl start docker
+
+systemctl enable ecs
+systemctl start ecs
+
+mkdir -p /ecs/mongo-data
+mkdir -p /ecs/prometheus
+
