@@ -35,4 +35,15 @@ module "ecs_cluster" {
   region             = var.region
 }
 
+module "network" {
+  source = "./modules/network" # adjust path as needed
+  # include variables like cidr_block, etc., if needed
+}
+
+module "iam" {
+  source = "./modules/iam"
+  # include role configuration vars here
+}
+
+
 

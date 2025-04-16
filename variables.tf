@@ -10,10 +10,9 @@ variable "profile" {
   default     = "default"
 }
 
-variable "cluster_name" {
-  description = "Name of the ECS cluster"
+variable "ecs_cluster_id" {
+  description = "ECS cluster ID"
   type        = string
-  default     = "my-ecs-cluster"
 }
 
 variable "nodejs_image" {
@@ -50,4 +49,14 @@ variable "min_size" {
   description = "Min size of the Auto Scaling Group"
   type        = number
   default     = 1
+}
+
+variable "key_name" {
+  description = "Key pair name for EC2 SSH access"
+  type        = string
+}
+
+variable "cluster_name" {
+  description = "ECS cluster name"
+  type        = string
 }

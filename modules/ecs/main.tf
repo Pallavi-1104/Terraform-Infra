@@ -31,12 +31,12 @@ resource "aws_ecs_task_definition" "app_task" {
   ])
 
   volume {
-    name = "mongo_data"
-    host_path {
-      path = "/ecs/mongo-data"
-    }
+    name = "mongo-volume"
+    host_path = "/ecs/mongo-data"
   }
-}
+
+  }
+
 
 resource "aws_ecs_service" "app_service" {
   name            = "node-mongo-service"
@@ -118,6 +118,17 @@ resource "aws_ecs_task_definition" "prometheus_grafana" {
     }
   }
 }
+
+resource "aws_ecs_service" "prometheus_grafana" {
+  name            = "prometheus-grafana"
+  cluster         = aws_ecs_cluster.this.id
+  task_definition = aws_ecs_task_definition.prometheus_grafana.arn
+  desired_count   = 1
+  launch_type     = "EC2"
+
+  # Add more configuration here (load balancer, network, etc.)
+}
+
 
 resource "aws_lb" "monitoring_alb" {
   name               = "monitoring-alb"
