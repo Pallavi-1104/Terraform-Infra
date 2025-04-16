@@ -14,7 +14,7 @@ provider "aws" {
 
 module "ecs_cluster" {
   source             = "./modules/ecs"
-  cluster_name       = var.cluster_name
+  ecs_cluster_id    = var.ecs_cluster_id
 
   nodejs_image       = var.nodejs_image
   mongodb_image      = var.mongodb_image

@@ -1,11 +1,6 @@
 variable "ecs_cluster_id" {
+  description = "The ECS cluster ID"
   type        = string
-  description = "The ID of the ECS cluster"
-}
-
-variable "cluster_name" {
-  type        = string
-  description = "Name of the ECS cluster"
 }
 
 variable "subnet_ids" {
@@ -42,4 +37,30 @@ variable "execution_role_arn" {
 variable "task_role_arn" {
   type        = string
   description = "IAM role ARN for ECS task"
+}
+
+variable "nodejs_image" {
+  description = "Docker image for Node.js app"
+  type        = string
+}
+
+variable "mongodb_image" {
+  description = "Docker image for MongoDB"
+  type        = string
+}
+
+variable "desired_capacity" {
+  type = number
+}
+
+variable "max_size" {
+  type = number
+}
+
+variable "min_size" {
+  type = number
+}
+
+variable "region" {
+  type = string
 }
