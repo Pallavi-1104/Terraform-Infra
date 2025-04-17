@@ -29,7 +29,8 @@ resource "aws_ecs_task_definition" "app_task" {
       ]
     }
   ])
-
+}
+qwertyu
   volume {
     name = "mongo-volume"
     host_path {
