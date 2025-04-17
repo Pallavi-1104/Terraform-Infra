@@ -24,9 +24,9 @@ module "iam" {
 }
 
 module "ecs_cluster" {
-  source       = "./modules/ecs"
-  cluster_name = "my-ecs-cluster"
+  source = "./modules/ecs"
 
+  cluster_name       = "my-ecs-cluster"
   nodejs_image       = var.nodejs_image
   mongodb_image      = var.mongodb_image
   instance_type      = var.instance_type
@@ -48,7 +48,6 @@ module "ecs_cluster" {
   key_name           = var.key_name
   region             = var.region
 }
-
 
 
 
