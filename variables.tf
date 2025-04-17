@@ -10,10 +10,10 @@ variable "profile" {
   default     = "default"
 }
 
-variable "ecs_cluster_id" {
+/*variable "ecs_cluster_id" {
   description = "ECS cluster ID"
   type        = string
-}
+}*/
 
 variable "nodejs_image" {
   description = "Docker image for Node.js app"
@@ -59,4 +59,9 @@ variable "key_name" {
 variable "cluster_name" {
   description = "ECS cluster name"
   type        = string
+}
+
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  type        = list(string)
 }
