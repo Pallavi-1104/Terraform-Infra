@@ -12,10 +12,6 @@ provider "aws" {
   profile = var.profile
 }
 
-#module "ecs_cluster" {
- # source             = "./modules/ecs"
-  #ecs_cluster_id    = var.ecs_cluster_id
-
 module "ecs_cluster" {
   source       = "./modules/ecs"
   cluster_name = "my-ecs-cluster" 
