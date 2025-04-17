@@ -1,8 +1,3 @@
-variable "ecs_cluster_id" {
-  description = "The ECS cluster ID"
-  type        = string
-}
-
 variable "subnet_ids" {
   type        = list(string)
   description = "List of subnet IDs for the ECS service"
@@ -66,6 +61,32 @@ variable "region" {
 }
 
 variable "cluster_name" {
-  description = "Name of the ECS Cluster"
+  description = "Name of the ECS cluster"
   type        = string
+}
+
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs for ECS Auto Scaling Group"
+  type        = list(string)
+}
+
+variable "asg_desired_capacity" {
+  description = "Desired number of ECS instances"
+  type        = number
+}
+
+variable "asg_min_size" {
+  description = "Minimum number of ECS instances"
+  type        = number
+}
+
+variable "asg_max_size" {
+  description = "Maximum number of ECS instances"
+  type        = number
+}
+
+variable "target_group_arns" {
+  description = "Target group ARNs for attaching instances"
+  type        = list(string)
+  default     = []
 }
