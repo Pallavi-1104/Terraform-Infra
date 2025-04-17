@@ -45,5 +45,9 @@ module "iam" {
   # include role configuration vars here
 }
 
+module "ecs_cluster" {
+  source       = "./modules/ecs"
+  cluster_name = "my-ecs-cluster" 
+}
 
 
