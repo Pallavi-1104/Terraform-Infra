@@ -7,3 +7,4 @@ desired_capacity = 1
 max_size         = 2
 min_size         = 1
 key_name         = "N.virginia-key"
+private_subnet_ids = ["subnet-abc123", "subnet-def456"]
