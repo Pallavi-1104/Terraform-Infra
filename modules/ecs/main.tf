@@ -29,16 +29,16 @@ resource "aws_ecs_task_definition" "app_task" {
       ]
     }
   ])
+  
+  volumes = jsonencode([
+    {
+      name      = "mongo_data"
+      host = {
+        sourcePath = "/ecs/mongo-data"
+      }
+    }
+  ])
 }
-qwertyu
-  volume {
-    name = "mongo-volume"
-    host_path {
-  path = "/ecs/mongo-data"
-}
-
-  }
-
 
 resource "aws_ecs_service" "app_service" {
   name            = "node-mongo-service"
