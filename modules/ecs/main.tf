@@ -29,7 +29,7 @@ resource "aws_ecs_task_definition" "app_task" {
       ]
     }
   ])
-  
+
   volumes = jsonencode([
     {
       name      = "mongo_data"
@@ -113,12 +113,14 @@ resource "aws_ecs_task_definition" "prometheus_grafana" {
     }
   ])
 
-  volume {
-    name = "prometheus_config"
-    host_path {
-      path = "/ecs/prometheus" # EC2 instances must have config file here
+  volumes = jsonencode([
+    {
+      name = "prometheus_config"
+      host = {
+        sourcePath = "/ecs/prometheus"
+      }
     }
-  }
+  ])
 }
 
 resource "aws_ecs_service" "prometheus_grafana" {
