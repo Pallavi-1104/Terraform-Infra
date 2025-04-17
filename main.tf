@@ -12,9 +12,14 @@ provider "aws" {
   profile = var.profile
 }
 
+#module "ecs_cluster" {
+ # source             = "./modules/ecs"
+  #ecs_cluster_id    = var.ecs_cluster_id
+
 module "ecs_cluster" {
-  source             = "./modules/ecs"
-  ecs_cluster_id    = var.ecs_cluster_id
+  source       = "./modules/ecs"
+  cluster_name = "my-ecs-cluster" 
+}
 
   nodejs_image       = var.nodejs_image
   mongodb_image      = var.mongodb_image
@@ -45,9 +50,6 @@ module "iam" {
   # include role configuration vars here
 }
 
-module "ecs_cluster" {
-  source       = "./modules/ecs"
-  cluster_name = "my-ecs-cluster" 
-}
+
 
 
