@@ -12,6 +12,7 @@ provider "aws" {
   profile = var.profile
 }
 
+
 module "network" {
   source = "./modules/network"
   # Add any required network module input variables here, e.g.:
@@ -35,12 +36,15 @@ module "ecs_cluster" {
   min_size           = var.min_size
   vpc_id             = module.network.vpc_id
   subnet_ids         = [module.network.subnet_public_1_id, module.network.subnet_public_2_id]
+  private_subnet_ids  = module.network.private_subnet_ids
   security_group_id  = module.network.ecs_instance_sg_id
   execution_role_arn = module.iam.execution_role_arn
   task_role_arn      = module.iam.task_role_arn
   key_name           = var.key_name
   region             = var.region
+  asg_min_size         = 1
+  asg_desired_capacity = 2
+  asg_max_size         = 3
 }
-
 
 
