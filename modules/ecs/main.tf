@@ -1,56 +1,62 @@
 resource "aws_ecs_task_definition" "app_task" {
-  family                   = "node-mongo-task"
-  network_mode            = "bridge"
+  family                   = "my-app-task"
   requires_compatibilities = ["EC2"]
-  cpu                     = "256"
-  memory                  = "512"
+  network_mode             = "awsvpc"
+  cpu                      = "256"
+  memory                   = "512"
 
   container_definitions = jsonencode([
     {
-      name      = "mongo"
-      image     = "mongo:latest"
-      memory    = 256
-      portMappings = [{ containerPort = 27017 }]
-      mountPoints = [{
-        sourceVolume  = "mongo_data",
-        containerPath = "/data/db"
-      }]
+      name      = "mongodb"
+      image     = var.mongodb_image
+      essential = true
+      portMappings = [
+        {
+          containerPort = 27017
+          hostPort      = 27017
+        }
+      ]
+      mountPoints = [
+        {
+          sourceVolume  = "mongo-volume"
+          containerPath = "/data/db"
+        }
+      ]
     },
     {
       name      = "nodejs"
-      image     = "node:18"
-      memory    = 256
-      portMappings = [{ containerPort = 3000 }]
-      environment = [
+      image     = var.nodejs_image
+      essential = true
+      portMappings = [
         {
-          name  = "MONGO_URL"
-          value = "mongodb://localhost:27017/mydb"
+          containerPort = 3000
+          hostPort      = 3000
         }
       ]
     }
   ])
 
-  volumes = jsonencode([
-    {
-      name      = "mongo_data"
-      host = {
-        sourcePath = "/ecs/mongo-data"
-      }
-    }
-  ])
+  volume {
+    name      = "mongo-volume"
+    host_path = "/ecs/mongo-data"
+  }
 }
 
 resource "aws_ecs_service" "app_service" {
   name            = "node-mongo-service"
-  cluster         = var.ecs_cluster_id
+  cluster         = var.cluster_name
   task_definition = aws_ecs_task_definition.app_task.arn
   desired_count   = 1
   launch_type     = "EC2"
   network_configuration {
     subnets         = var.subnet_ids
     security_groups = [var.security_group_id]
-    assign_public_ip = true
+   # assign_public_ip = true
   }
+}
+
+resource "aws_ecs_cluster" "cluster" {
+  name = var.cluster_name
 }
 
 resource "aws_ecs_cluster" "this" {
@@ -70,67 +76,79 @@ resource "aws_launch_template" "ecs" {
   }
 
   key_name = var.key_name
-  security_group_names = [aws_security_group.ecs_sg.name]
+  vpc_security_group_ids = [aws_security_group.ecs_sg.id]
 }
 
 resource "aws_ecs_task_definition" "prometheus_grafana" {
-  family                   = "prometheus-grafana"
-  network_mode             = "bridge"
+  family                   = "monitoring-task"
   requires_compatibilities = ["EC2"]
+  network_mode             = "awsvpc"
   cpu                      = "256"
   memory                   = "512"
-  execution_role_arn       = var.execution_role_arn
-  task_role_arn            = var.task_role_arn
 
   container_definitions = jsonencode([
-    {
-      name      = "prometheus",
-      image     = "prom/prometheus",
-      essential = true,
-      portMappings = [
-        {
-          containerPort = 9090,
-          hostPort      = 9090
-        }
-      ],
-      mountPoints = [
-        {
-          sourceVolume  = "prometheus_config",
-          containerPath = "/etc/prometheus"
-        }
-      ]
-    },
-    {
-      name      = "grafana",
-      image     = "grafana/grafana",
-      essential = true,
-      portMappings = [
-        {
-          containerPort = 3000,
-          hostPort      = 3001
-        }
-      ]
-    }
-  ])
-
-  volumes = jsonencode([
-    {
-      name = "prometheus_config"
-      host = {
-        sourcePath = "/ecs/prometheus"
+  {
+    name      = "prometheus"
+    image     = "prom/prometheus:latest"
+    essential = true
+    portMappings = [
+      {
+        containerPort = 9090
+        hostPort      = 9090
+        protocol      = "tcp"
       }
-    }
-  ])
+    ]
+  },
+  {
+    name      = "grafana"
+    image     = "grafana/grafana:latest"
+    essential = true
+    portMappings = [
+      {
+        containerPort = 3000
+        hostPort      = 3000
+        protocol      = "tcp"
+      }
+    ]
+  }
+])
+
+
+  volume {
+    name      = "prometheus-data"
+    host_path = "/ecs/prometheus-data"
+  }
 }
 
 resource "aws_ecs_service" "prometheus_grafana" {
   name            = "prometheus-grafana"
-  cluster         = aws_ecs_cluster.this.id
+  cluster         = var.cluster_name
+  launch_type     = "EC2"
   task_definition = aws_ecs_task_definition.prometheus_grafana.arn
   desired_count   = 1
-  launch_type     = "EC2"
 
-  # Add more configuration here (load balancer, network, etc.)
+  network_configuration {
+    subnets         = var.subnet_ids
+    security_groups = [var.security_group_id]
+    # assign_public_ip is only for FARGATE, omit for EC2
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.prometheus_tg.arn
+    container_name   = "prometheus"
+    container_port   = 9090
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.grafana_tg.arn
+    container_name   = "grafana"
+    container_port   = 3000
+  }
+
+  depends_on = [
+    aws_lb_listener.prometheus_listener,
+    aws_lb_listener.grafana_listener
+  ]
 }
 
 
@@ -146,7 +164,7 @@ resource "aws_lb_target_group" "nodejs" {
   name        = "nodejs-tg"
   port        = 3000
   protocol    = "HTTP"
-  target_type = "instance"
+  target_type = "ip"
   vpc_id      = var.vpc_id
 
   health_check {
@@ -165,7 +183,7 @@ resource "aws_lb_target_group" "prometheus_tg" {
   port     = 9090
   protocol = "HTTP"
   vpc_id   = var.vpc_id
-  target_type = "instance"
+  target_type = "ip"
 
   health_check {
   path                = "/"
@@ -183,7 +201,7 @@ resource "aws_lb_target_group" "grafana_tg" {
   port     = 3001
   protocol = "HTTP"
   vpc_id   = var.vpc_id
-  target_type = "instance"
+  target_type = "ip"
 
   health_check {
   path                = "/"
@@ -276,5 +294,22 @@ resource "aws_security_group" "ecs_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_autoscaling_group" "ecs" {
+  desired_capacity     = 1
+  max_size             = 2
+  min_size             = 1
+  vpc_zone_identifier  = var.private_subnet_ids
+  target_group_arns    = var.target_group_arns
+  launch_template {
+    id      = aws_launch_template.ecs.id
+    version = "$Latest"
+  }
+  tag {
+    key                 = "Name"
+    value               = "ecs-instance"
+    propagate_at_launch = true
   }
 }
