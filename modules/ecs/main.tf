@@ -32,8 +32,9 @@ resource "aws_ecs_task_definition" "app_task" {
 
   volume {
     name = "mongo-volume"
-    host_path = "/ecs/mongo-data"
-  }
+    host_path {
+  path = "/ecs/mongo-data"
+}
 
   }
 
@@ -237,4 +238,40 @@ resource "aws_iam_role_policy_attachment" "ecs_instance_role_policy" {
 resource "aws_iam_instance_profile" "ecs_instance" {
   name = "ecsInstanceProfile"
   role = aws_iam_role.ecs_instance_role.name
+}
+
+data "aws_ami" "ecs" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-ecs-hvm-*-x86_64-ebs"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["amazon"]
+}
+
+resource "aws_security_group" "ecs_sg" {
+  name        = "${var.cluster_name}-sg"
+  description = "ECS security group"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
